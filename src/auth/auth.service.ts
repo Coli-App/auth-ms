@@ -1,13 +1,14 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createSupabaseClient, createSupabaseAdminClient } from '../providers/supabase/supabase';
-
+import { User } from "./entities/user.entity";
 @Injectable()
 export class AuthService {
   private supabase: any;
 
   constructor(private configService: ConfigService) {
-    this.supabase = createSupabaseClient(this.configService);
+    this.supabase = createSupabaseAdminClient(this.configService);
+  
   }
 
   async login(email: string, password: string) {
@@ -17,15 +18,18 @@ export class AuthService {
         email: email,
         password: password,
       });
-
       if (error) throw error;
-
+      const role = await this.get_role(data.user.id);
+      console.log('Rol obtenido para el usuario:', role);
+      data.user.role = role;
       return {
         success: true,
         code: 200,
         data: data,
         messages: 'Login exitoso',
       };
+
+      
     } catch (error: any) {
       console.error('Error en login:', error);
       throw new HttpException(
@@ -37,10 +41,20 @@ export class AuthService {
     }
   }
 
+  async get_role(authId: string) {
+  
+    const { data, error } = await this.supabase
+        .from("User")
+        .select("*")
+        .eq("auth_id", authId)
+        .single();
+ 
+      if (error) throw error;
+      return data.rol;
+  } 
+
   async logout(accessToken: string) {
     try {
-
-    
       const segments = accessToken.split('.');
       if (segments.length !== 3) {
         throw new HttpException(

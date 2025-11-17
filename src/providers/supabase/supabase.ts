@@ -39,7 +39,8 @@ export const createSupabaseAdminClient = (configService: ConfigService) => {
         persistSession: false,
       },
     });
-  }
+   
+  } 
 
   return supabaseAdminClient;
 };
