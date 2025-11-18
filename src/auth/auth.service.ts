@@ -1,7 +1,6 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createSupabaseClient, createSupabaseAdminClient } from '../providers/supabase/supabase';
-import { User } from "./entities/user.entity";
 @Injectable()
 export class AuthService {
   private supabase: any;
