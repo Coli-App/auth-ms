@@ -14,12 +14,10 @@ FROM node:22.21-alpine AS production
 
 WORKDIR /app
 
-RUN npm install -g pnpm
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
 
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --prod
-
-COPY --from=build /app/dist ./dist
 
 EXPOSE 3000
 CMD ["node", "dist/main.js"]
