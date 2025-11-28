@@ -19,6 +19,32 @@ import { SupabaseAuthGuard } from './guards/supabase-auth.guard';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Get('health')
+  @ApiOperation({ 
+    summary: 'Health check',
+    description: 'Endpoint de prueba para verificar que el servicio está funcionando correctamente en Vercel'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Servicio funcionando correctamente',
+    schema: {
+      example: {
+        status: 'ok',
+        message: 'Auth service is running on Vercel',
+        timestamp: '2025-11-27T01:00:00.000Z',
+        environment: 'production'
+      }
+    }
+  })
+  getHealth() {
+    return {
+      status: 'ok',
+      message: 'Auth service is running on Vercel',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development'
+    };
+  }
+
   @Post("login")
   @ApiOperation({ 
     summary: 'Iniciar sesión',
