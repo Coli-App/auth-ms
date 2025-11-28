@@ -2,36 +2,37 @@ import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { AppModule } from '../src/app.module';
 import express from 'express';
+import { INestApplication } from '@nestjs/common';
 
-const expressApp = express();
-let cachedApp;
+let cachedApp: INestApplication;
 
 async function bootstrap() {
   if (!cachedApp) {
-    const nestApp = await NestFactory.create(
+    const expressApp = express();
+    const adapter = new ExpressAdapter(expressApp);
+    
+    const app = await NestFactory.create(
       AppModule,
-      new ExpressAdapter(expressApp),
+      adapter,
       {
         logger: ['error', 'warn', 'log'],
       }
     );
     
     // Habilitar CORS
-    nestApp.enableCors();
+    app.enableCors();
     
-    // NO usar prefijo global para que las rutas funcionen directamente
-    // nestApp.setGlobalPrefix('api');
+    await app.init();
+    cachedApp = app;
     
-    await nestApp.init();
-    cachedApp = nestApp;
-    
-    console.log('NestJS app initialized');
+    console.log('NestJS app initialized successfully');
   }
-  return expressApp;
+  return cachedApp;
 }
 
 // Handler de Vercel
 export default async (req, res) => {
-  await bootstrap();
-  return expressApp(req, res);
+  const app = await bootstrap();
+  const expressInstance = app.getHttpAdapter().getInstance();
+  return expressInstance(req, res);
 };
