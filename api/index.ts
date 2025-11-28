@@ -1,38 +1,29 @@
 import { NestFactory } from '@nestjs/core';
-import { ExpressAdapter } from '@nestjs/platform-express';
 import { AppModule } from '../src/app.module';
-import express from 'express';
 import { INestApplication } from '@nestjs/common';
 
-let cachedApp: INestApplication;
+let app: INestApplication;
 
 async function bootstrap() {
-  if (!cachedApp) {
-    const expressApp = express();
-    const adapter = new ExpressAdapter(expressApp);
+  if (!app) {
+    app = await NestFactory.create(AppModule, {
+      logger: ['error', 'warn', 'log'],
+    });
     
-    const app = await NestFactory.create(
-      AppModule,
-      adapter,
-      {
-        logger: ['error', 'warn', 'log'],
-      }
-    );
-    
-    // Habilitar CORS
     app.enableCors();
     
     await app.init();
-    cachedApp = app;
     
     console.log('NestJS app initialized successfully');
   }
-  return cachedApp;
+  return app;
 }
 
 // Handler de Vercel
 export default async (req, res) => {
-  const app = await bootstrap();
-  const expressInstance = app.getHttpAdapter().getInstance();
-  return expressInstance(req, res);
+  const nestApp = await bootstrap();
+  const server = nestApp.getHttpServer();
+  
+  // Delegar la request al servidor de NestJS
+  return server.emit('request', req, res);
 };
