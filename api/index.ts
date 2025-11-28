@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
-import { INestApplication } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 let app: INestApplication;
 
@@ -20,10 +21,11 @@ async function bootstrap() {
 }
 
 // Handler de Vercel
-export default async (req, res) => {
+export default async (req: VercelRequest, res: VercelResponse) => {
   const nestApp = await bootstrap();
-  const server = nestApp.getHttpServer();
+  const httpAdapter = nestApp.getHttpAdapter();
+  const instance = httpAdapter.getInstance();
   
-  // Delegar la request al servidor de NestJS
-  return server.emit('request', req, res);
+  // Manejar la request usando el listener de Express
+  instance(req, res);
 };
